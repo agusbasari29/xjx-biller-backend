@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/agusbasari29/xjx-biller-backend/database"
@@ -15,7 +16,10 @@ var (
 
 func main() {
 	defer database.CloseDatabaseConnection(db)
-	db.AutoMigrate(&entity.Users{}, &entity.Clients{}, &entity.Products{})
+	db.AutoMigrate(&entity.Users{}, &entity.Clients{}, &entity.Products{}, &entity.Transaction{}, &entity.ItemsTrx{})
 	g := gin.Default()
+	g.GET("/", func(ctx *gin.Context) {
+		fmt.Println("Hello")
+	})
 	g.Run(os.Getenv("SERVER_PORT"))
 }
