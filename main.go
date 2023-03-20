@@ -8,7 +8,6 @@ import (
 	"github.com/agusbasari29/xjx-biller-backend/database"
 	"github.com/agusbasari29/xjx-biller-backend/entity"
 	"github.com/agusbasari29/xjx-biller-backend/queue"
-	"github.com/agusbasari29/xjx-biller-backend/tasks"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -22,18 +21,15 @@ var (
 func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-
 	defer database.CloseDatabaseConnection(db)
-	// subscribe := tasks.NewSubscribeTasks(client)
-	pub := tasks.NewPublishTask(client)
-	// callbacks := tasks.onMessageReceived(client)
 	db.AutoMigrate(&entity.Users{}, &entity.Clients{}, &entity.Products{}, &entity.Transaction{}, &entity.ItemsTrx{})
+	go func() {
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			panic(token.Error())
+		}
+
+	}()
 	g := gin.Default()
 	g.Run(os.Getenv("SERVER_PORT"))
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
-	// subscribe.Subscribe("/xjx/#")
-	pub.Publish("test", "/xjx/test")
 	<-c
 }
