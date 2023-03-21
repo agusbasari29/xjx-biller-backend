@@ -27,6 +27,8 @@ func main() {
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			panic(token.Error())
 		}
+	}()
+	go func() {
 
 	}()
 	g := gin.Default()
