@@ -1,5 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+// #include "millisDelay.h"
 #include <AsyncDelay.h>
 
 #define wifi_ssid "jabrix home"      // SSID
@@ -10,17 +11,17 @@
 #define mqtt_user "jabrix"
 #define mqtt_password "12345"
 #define mqtt_client_id "client01"
-#define in_topic "/xjx/" + mqtt_client_id + "/in"   // client subscribe
-#define out_topic "/xjx/" + mqtt_client_id + "/out" // client publish
+#define in_topic "/xjx/client01/in"   // client subscribe
+#define out_topic "/xjx/client01/out" // client publish
 
 #define relay 0
 
-int states = HIGH;      //
-int pendingTimeout = 0; //
+int states = HIGH;         //
+int additionalTimeout = 0; //
 
 WiFiClient espClient;
 PubSubClient client;
-AsyncDelay timeOut;
+AsyncDelay relayTimeOut;
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -35,7 +36,6 @@ void callback(char *topic, byte *payload, unsigned int length)
         received = atoi(receivedChar);
         if (received == 0)
             digitalWrite(relay, !LOW);
-
         if (received > 0)
             digitalWrite(relay, !HIGH);
         timeOut.start();
@@ -53,7 +53,7 @@ void setup()
     client.setCallback(callback);
     pinMode(relay, OUTPUT);
     digitalWrite(relay, !LOW);
-    client.publish("/xjx/" + mqtt_client_id + "/ip", WiFi.localIP().toString().c_str(), true);
+    client.publish("/xjx/client01/ip", WiFi.localIP().toString().c_str(), true);
     // client.publish("/xjx/" + mqtt_client_id + "/", WiFi.localIP().toString().c_str(), true);
 }
 
@@ -101,6 +101,10 @@ void loop()
         reconnect();
     }
     client.loop();
+    if (relayTimeOut.isExpired() && additionalTimeout == 0)
+    {
+        digitalWrite(relay, !LOW);
+        delay(500);
+    }
     client.subscribe(in_topic);
-    delay(500);
 }
